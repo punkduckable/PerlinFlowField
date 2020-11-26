@@ -48,9 +48,7 @@ the particles will stick to the "paths" in the flowfield.
 
 -------------------------------------------
 
-In terms of plotting I suggest trying your own colour schemes, I have a few there
-using adobe colour is a nice place to find some 
-https://color.adobe.com/create/color-wheel
+In terms of plotting I suggest trying your own colour schemes
 
 Its also fun to play around with the marker size and opacity
 
