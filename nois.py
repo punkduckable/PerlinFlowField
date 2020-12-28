@@ -1,26 +1,16 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Aug 22 19:19:08 2020
-
-@author: Louie
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Aug 22 19:19:08 2020
-
-@author: Louie
-"""
+# Dependencies:
+# Run with PYTHON 2 (not python 3)
+# Requires matplotlib version 1.4 or above
 
 import numpy as np
 import random as rand
 import matplotlib.pyplot as plt
 
 
+###############################################################################
+# ball class
+
 class Ball():
-
-
-  
     def __init__(self,size,n,max_vel):
         self.n=n
         self.size=size
@@ -96,6 +86,27 @@ class Ball():
 
 
 
+###############################################################################
+# plot function (for debugging)
+
+def plot(n,data,name="test"):
+    n=2**n
+    plt.figure(3,figsize=(19.20*4,10.80*4))
+    plt.clf()
+    plt.axis('off')
+    fig=plt.figure(1)
+    ax = fig.add_subplot(1,1,1)
+    x=np.linspace(0,n,n)
+    y=np.linspace(0,n,n)
+    plot=ax.pcolormesh(x, y, data,cmap="Greys")
+    plt.savefig("%s"%(name), dpi=300)
+
+
+
+
+###############################################################################
+# Perlin noise functions 
+
 def inner_grid_setup(sx,ex,sy,ey,n): 
     """ 
     sx= start x, ex = end x...
@@ -117,6 +128,7 @@ def inner_grid_setup(sx,ex,sy,ey,n):
             inner_grid[i][j][1]=yy[i][j]
    
     return inner_grid
+
 
 def get_inner_prevals(corners,m):
     """ returns the inner values of the grid"""
@@ -156,19 +168,6 @@ def perlin(n,m):
     
     return data
 
-def plot(n,data,name="test"):
-    n=2**n
-    plt.figure(2,figsize=(19.20*4,10.80*4))
-    plt.clf()
-    plt.axis('off')
-    fig=plt.figure(1)
-    ax = fig.add_subplot(1,1,1)
-    x=np.linspace(0,n,n)
-    y=np.linspace(0,n,n)
-    plot=ax.pcolormesh(x, y, data,cmap="Greys")
-    plt.savefig("%s"%(name), dpi=300)
-
-
 
 def fractal(n,k):
      """
@@ -176,79 +175,177 @@ def fractal(n,k):
      super imposes different frequency perlin noise
      
      """
-     maximum=2**n
-     data=np.zeros((maximum,maximum))
+     maximum = 2**n
+     data = np.zeros((maximum, maximum))
      for i in range(k):
-         temp=perlin(maximum,2**(n-i))*(2**(-(1+i)))
-         data=data+temp
+         temp = perlin(maximum, 2**(n-i))*(2**(-(1+i)))
+         data = data + temp
          #plot(n,data/k,i)
-     data=data/k   
+     data = data/k   
      #data=1-np.abs(data)
      #plot(n,data)
      return data
  
-    
-def plot_flow(x_hist,y_hist):
-    x_hist=x_hist.transpose()   
-    y_hist=y_hist.transpose()
+
+
+###############################################################################
+# plotting functions 
+
+# makes the final "flow" plot. 
+def plot_flow(x_hist,                  # (float array)
+              y_hist,                  # (float array)
+              image_name = "myimage"): # (string)
+    # Transpose history data
+    x_hist = x_hist.transpose()   
+    y_hist = y_hist.transpose()
+
+    # Set up plot. 
     plt.style.use("default")
-    #plt.style.use('dark_background')
     plt.axis('off')
-    plt.figure(1,figsize=(19.20,10.80))
+    plt.figure(1, figsize = (19.20,10.80), dpi = 1200)
     
-    c_list=["#AD450C","#FF813D","#FA6E23","#00ADA7","#23FAF2","white","black"]
-    #c_list=["#04577A","#53C8FB","#07B1FA","#28627A","#068CC7","white"]
+    # This specifies the set of possible colors for the plot. 
+    #c_list = ["#AD450C","#FF813D","#FA6E23","#00ADA7","#23FAF2","white","black"]
+    c_list=["#04577A","#53C8FB","#07B1FA","#28627A","#068CC7","white"]
     #c_list=["#7A2418","#FB8C7D","#FA4932","#7A443D","#C23827"]
     #c_list=["black"]
-    s_list=[2,2,2,2,5,2,10,15]
+
+    # Set of possible ball sizes
+    s_list = [2,2,2,2,5,2,10,15]
     #s_list=[10]
     
+    # Make the plot!
     for i in range(len(x_hist)):
-        color=rand.choice(c_list)
-        s=rand.choice(s_list)
-        plt.scatter(x_hist[i],y_hist[i],s=s,alpha=0.11,color=color)
-    plt.show()    
-    #plt.savefig("waves6",dpi=600)
-    #plt.savefig('myimage.svg', format='svg', dpi=1200)
+        ball_color = rand.choice(c_list)
+        ball_size  = rand.choice(s_list)
+        plt.scatter(x_hist[i], 
+                    y_hist[i], 
+                    s = ball_size, 
+                    alpha = 0.11, 
+                    c = ball_color, 
+                    edgecolors = 'none')  
+
+    # Save flow plot!
+    plt.savefig(image_name, dpi = 1200)
+    #plt.savefig(image_name + ".svg", format = 'svg')
+
+    # Display flow plot. 
+    plt.show()  
+
          
-def plot_vectors(vector_x,vector_y,size):
+
+
+# Plots vectors
+def plot_vectors(vector_x,             # (float array)
+                 vector_y,             # (float array)
+                 size):                # (int)
+    # Set up plot. 
     plt.style.use('default')
     plt.axis('off')
-    plt.figure(3,figsize=(19.20,10.80))
-    x=np.linspace(0,size,size+1)
-    y=np.linspace(0,size,size+1)
-    xx,yy=np.meshgrid(x,y)
-    plt.quiver( xx,yy,vector_x,vector_y,color="black")
-    plt.show()    
-        
-def rotate(xs,ys,angles):
+    plt.figure(2, figsize = (19.20,10.80))
+
+    # Set up x, y coordinates in the plot. 
+    x = np.linspace(0, size,size + 1)
+    y = np.linspace(0, size,size + 1)
+    xx,yy = np.meshgrid(x, y)
+
+    # Plot a "quiver" at each point. The x, y components of this 
+    # vector are the corresponding components of vector_x, vector_y.
+    plt.quiver(xx, 
+               yy, 
+               vector_x, 
+               vector_y, 
+               color = "black")
+
+    # Display vector plot. 
+    plt.show();
+
+
+
+# Used to rotate vectors (to give flow directions)        
+def rotate(xs,                         # (float)
+           ys,                         # (float)
+           angles):                    # (float)
     new_xs = np.cos(angles) * (xs) - np.sin(angles) * (ys)
     new_ys = np.sin(angles) * (xs) + np.cos(angles) * (ys)
     return new_xs, new_ys    
 
-def vector_field(data,wildness=25,x_scale=50,y_scale=100):
-    size=len(data[0])
-    vector_x=np.ones((size,size))
-    vector_y=np.zeros((size,size))
-    angles=2*np.pi*data*wildness
-    vector_x,vector_y=rotate(vector_x,vector_y,angles)
-    vector_x=vector_x*x_scale
-    vector_y=vector_y*y_scale
-    plot_vectors(vector_x,vector_y,size)
+
+
+# Creates the vector field. 
+def vector_field(data,                 # (float array)
+                 wildness = 25,        # (float)
+                 x_scale = 50,         # (float)
+                 y_scale = 100):       # (float)
+    # Initialize vector_x, vector_y arrays. At first, all vectors point in the y direction. 
+    # They are then rotated by an amount specified by the "Angles" variable (which is 
+    # determined by the perlin noise) to get the final vector field.  
+    size = len(data[0])
+    vector_x = np.ones((size,size))
+    vector_y = np.zeros((size,size))
+
+    # get angles at each point. The values of the angle are based on the data from the perlin noise. 
+    angles = 2*np.pi*data*wildness
+
+    # Set force field using initalized vectors and angles
+    vector_x,vector_y = rotate(vector_x, vector_y, angles)
+
+    # Scale x, y components of the vector field 
+    vector_x = vector_x*x_scale
+    vector_y = vector_y*y_scale
+
+    # Plot the vector field
+    #plot_vectors(vector_x, vector_y, size)
     
     return vector_x,vector_y
 
-def run(n,k,balls,updates,max_vel=5,wildness=25,x_scale=50,y_scale=100):
-    """ n>k (ints)
-    
-    """
-    data=fractal(n,k)
-    size=len(data[0])
-    vector_x,vector_y=vector_field(data,wildness,x_scale,y_scale)
-    balls=Ball(size=size,n=balls,max_vel=max_vel)
-    x_hist,y_hist=balls.drive(vector_x, vector_y, updates)
-    plot_flow(x_hist, y_hist)
+
+
+# Run function!
+def run(n,                        # Controls perlin noise                      (int)
+        k,                        # Controls perlin noise                      (int)
+        balls,                    # Number of balls                            (int)
+        updates,                  # Number of ball position updates            (int)
+        max_vel = 2,              # Maximum allowed particle velocity          (float) 
+        wildness = 25,            # Controls how "wild" the plot is            (float)
+        x_scale = 50,             # Scales x component of force field          (float)
+        y_scale = 25,             # Scales y component of force field          (float)
+        image_name = "myimage"):  # Name of the final image (an svg); saved in the current working directory (stirng)
+    # Assumption: We must have n > k (where n and k are integers)
+    data = fractal(n,k)
+
+    # Get the size of the data 
+    size = len(data[0])
+
+    # Set up force field using the data. force_x, force_y represent the x and y 
+    # components of the force, respectively. 
+    force_x, force_y = vector_field(data, 
+                                    wildness, 
+                                    x_scale, 
+                                    y_scale)
+
+    # Set up an array of balls
+    balls = Ball(size = size,
+                 n = balls,
+                 max_vel = max_vel);
+
+    # Move the balls through the force field (defined by force_x, force_y)
+    # x_hist and y_hist store the tracks of each ball.
+    x_hist, y_hist = balls.drive(force_x, 
+                                 force_y, 
+                                 updates)
+
+    # plot the ball paths!
+    plot_flow(x_hist, 
+              y_hist, 
+              image_name)
     
 
-run(7,6,100,50)
 
+###############################################################################
+run(n = 8,          
+    k = 7,          
+    balls = 1000,   
+    updates = 1000, 
+    wildness = 3,   
+    image_name = "wavy"); 
