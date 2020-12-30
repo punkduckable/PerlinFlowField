@@ -7,6 +7,7 @@ import random as rand
 import matplotlib.pyplot as plt
 
 
+
 ###############################################################################
 # Particles class
 
@@ -139,25 +140,6 @@ class Particles():
 
 
 
-
-###############################################################################
-# plot function (for debugging)
-
-def plot(n,data,name = "test"):
-    n = 2**n
-    plt.figure(3,figsize = (19.20*4,10.80*4))
-    plt.clf()
-    plt.axis('off')
-    fig = plt.figure(1)
-    ax = fig.add_subplot(1,1,1)
-    x = np.linspace(0,n,n)
-    y = np.linspace(0,n,n)
-    plot = ax.pcolormesh(x, y, data,cmap = "Greys")
-    plt.savefig("%s"%(name), dpi = 300)
-
-
-
-
 ###############################################################################
 # Perlin noise functions
 
@@ -283,9 +265,7 @@ def plot_flow(x_hist,                  # (float array)
     #plt.savefig(image_name + ".svg", format = 'svg')
 
     # Display flow plot.
-    plt.show()
-
-
+    #plt.show()
 
 
 
@@ -315,6 +295,9 @@ def plot_vectors(vector_x,             # (float array)
     plt.show();
 
 
+
+###############################################################################
+# vector_field, run.
 
 # Used to rotate vectors (to give flow directions)
 def rotate(xs,                         # (float)
@@ -363,7 +346,7 @@ def run(n,                        # Controls perlin noise                      (
         max_vel,                  # Maximum allowed particle velocity          (float)
         angle_scale,              # Scales rotation by noise of force field    (float)
         x_scale = 50,             # Scales x component of force field          (float)
-        y_scale = 25,             # Scales y component of force field          (float)
+        y_scale = 50,             # Scales y component of force field          (float)
         image_name = "myimage"):  # Name of the final image (an svg); saved in the current working directory (stirng)
     # Assumption: We must have n > k (where n and k are integers)
     data = fractal(n,k)
@@ -399,8 +382,8 @@ def run(n,                        # Controls perlin noise                      (
 ###############################################################################
 run(n = 7,
     k = 6,
-    num_particles = 1000,
-    num_updates = 1000,
+    num_particles = 500,
+    num_updates = 500,
     max_vel = .2,
-    angle_scale = 5,
+    angle_scale = 1,
     image_name = "wavy");
