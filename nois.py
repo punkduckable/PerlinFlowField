@@ -224,7 +224,7 @@ def fractal(n,k):
      maximum = 2**n
      data = np.zeros((maximum, maximum))
      for i in range(k):
-         temp = perlin(maximum, 2**(n-i))*(2**(-(1+i)))
+         temp = perlin(maximum, 2**(n-i))*(2**(-(1 + i)))
          data = data + temp
          #plot(n,data/k,i)
      data = data/k
@@ -355,7 +355,9 @@ def run(n,                        # Controls size of grid + perlin noise       (
         x_scale = 50,             # Scales x component of force field          (float)
         y_scale = 200,             # Scales y component of force field         (float)
         image_name = "myimage"):  # Name of the final image (an svg); saved in the current working directory (stirng)
-    # Assumption: We must have n > k (where n and k are integers)
+    # Assumption: k < n. We need this for the perlin noise to work. 
+
+    # First, generate the data.
     data = fractal(n,k)
 
     # Get the size of the data
