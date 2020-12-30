@@ -31,9 +31,6 @@ class Particles():
         self.acc_x = np.zeros(num_particles)
         self.acc_y = np.zeros(num_particles)
 
-        self.x_hist = self.pos_x
-        self.y_hist = self.pos_y
-
 
 
     def update_pos(self):
@@ -118,25 +115,38 @@ class Particles():
               vector_y,                                    # (float array) [size x size]
               num_updates):                                # (int)
 
+        # Initialize x_hist, y_hist variables.
+        # These are arrays of length num_particles. Each element of
+        # these arrays is another array of length num_updates. The t-th element of
+        # x_hist[i] stores the position of particle i at time step t.
+        x_hist = [];
+        y_hist = [];
+
+        for i in range(0, self.num_particles):
+            x_hist.append(np.zeros(num_updates));
+            y_hist.append(np.zeros(num_updates));
+
         # Loop through steps.
         for t in range(0, num_updates):
             # First, determine the force applied to each particle.
-            fx, fy = self.get_forces(vector_x, vector_y)
+            fx, fy = self.get_forces(vector_x, vector_y);
 
             # Now apply those forces to the particles and update their positions!
-            self.apply_force(fx, fy)
-            self.update_pos()
+            self.apply_force(fx, fy);
+            self.update_pos();
 
             # Apply periodic BCs
-            self.periodic_BC()
+            self.periodic_BC();
 
             # Apply speed limit
-            self.speed_check()
+            self.speed_check();
 
-            self.x_hist = np.vstack([self.x_hist, self.pos_x])
-            self.y_hist = np.vstack([self.y_hist, self.pos_y])
+            # Add the particle's current positions to the history variables.
+            for i in range(0, self.num_particles):
+                x_hist[i][t] = self.pos_x[i];
+                y_hist[i][t] = self.pos_y[i];
 
-        return self.x_hist, self.y_hist
+        return x_hist, y_hist;
 
 
 
@@ -230,42 +240,42 @@ def fractal(n,k):
 # makes the final "flow" plot.
 def plot_flow(x_hist,                  # (float array)
               y_hist,                  # (float array)
+              num_particles,           # (int)
+              num_updates,             # (int)
               image_name):             # (string)
-    # Transpose history data
-    x_hist = x_hist.transpose()
-    y_hist = y_hist.transpose()
 
     # Set up plot.
     plt.style.use("default")
     plt.axis('off')
-    plt.figure(1, figsize = (19.20,10.80), dpi = 1200)
+    plt.figure(1, figsize = (18, 12), dpi = 1200)
 
     # This specifies the set of possible colors for the plot.
-    c_list = ["#04577A","#53C8FB","#07B1FA","#28627A","#068CC7","#ffffff"]                    # Shades of Blue
-    #c_list = ["#3fe835", "#177511", "#ffffff"];              # Shades of Green
+    c_list = ['#04577A','#53C8FB','#07B1FA','#28627A','#068CC7','#ffffff']                    # Shades of Blue
+    #c_list = ['#3fe835', "#177511", "#ffffff"];              # Shades of Green
     #c_list = ["#ff0000", "#ff5353", "#ff9797", "#ffebeb", "#bb0101", "#7e0202", "#000000"];   # Shades of Red
     #c_list = ["#AD450C","#FF813D","#FA6E23","#00ADA7","#23FAF2","white","black"]              # Cyan, Brown, Black
 
     # Set of possible particle sizes
     s_list = [5,6,6,7]
 
-    # Make the plot!
-    for i in range(len(x_hist)):
-        particle_color = rand.choice(c_list)
-        particle_size  = rand.choice(s_list)
+    # Now, make the plot!
+    for i in range(0, num_particles):
+        particle_color = rand.choice(c_list);
+        particle_size = rand.choice(s_list);
+
         plt.scatter(x_hist[i],
                     y_hist[i],
                     s = particle_size,
+                    color = particle_color,
                     alpha = .6,
-                    c = particle_color,
-                    edgecolors = 'none')
+                    edgecolor = 'None');
 
     # Save flow plot!
     plt.savefig(image_name, dpi = 900)
     #plt.savefig(image_name + ".svg", format = 'svg')
 
     # Display flow plot.
-    #plt.show()
+    plt.show()
 
 
 
@@ -276,23 +286,20 @@ def plot_vectors(vector_x,             # (float array)
     # Set up plot.
     plt.style.use('default')
     plt.axis('off')
-    plt.figure(2, figsize = (19.20,10.80))
+    plt.figure(2, figsize = (18, 12))
 
     # Set up x, y coordinates in the plot.
-    x = np.linspace(0, size,size + 1)
-    y = np.linspace(0, size,size + 1)
-    xx,yy = np.meshgrid(x, y)
+    x = np.linspace(0, size - 1, size)
+    y = np.linspace(0, size - 1, size)
+    x_coords, y_coords = np.meshgrid(x, y)
 
     # Plot a "quiver" at each point. The x, y components of this
     # vector are the corresponding components of vector_x, vector_y.
-    plt.quiver(xx,
-               yy,
+    plt.quiver(x_coords,
+               y_coords,
                vector_x,
                vector_y,
                color = "black")
-
-    # Display vector plot.
-    plt.show();
 
 
 
@@ -300,11 +307,11 @@ def plot_vectors(vector_x,             # (float array)
 # vector_field, run.
 
 # Used to rotate vectors (to give flow directions)
-def rotate(xs,                         # (float)
-           ys,                         # (float)
+def rotate(vector_x,                         # (float)
+           vector_y,                         # (float)
            angles):                    # (float)
-    new_xs = np.cos(angles) * (xs) - np.sin(angles) * (ys)
-    new_ys = np.sin(angles) * (xs) + np.cos(angles) * (ys)
+    new_xs = np.cos(angles) * vector_x - np.sin(angles) * vector_y;
+    new_ys = np.sin(angles) * vector_x + np.cos(angles) * vector_y;
     return new_xs, new_ys
 
 
@@ -322,7 +329,7 @@ def vector_field(data,                 # (float array)
     vector_y = np.zeros((size,size))
 
     # get angles at each point. The values of the angle are based on the data from the perlin noise.
-    angles = 2*np.pi*data*angle_scale
+    angles = 2*np.pi*data*angle_scale;
 
     # Set force field using initalized vectors and angles
     vector_x,vector_y = rotate(vector_x, vector_y, angles)
@@ -332,21 +339,21 @@ def vector_field(data,                 # (float array)
     vector_y = vector_y*y_scale
 
     # Plot the vector field
-    #plot_vectors(vector_x, vector_y, size)
+    plot_vectors(vector_x, vector_y, size)
 
     return vector_x,vector_y
 
 
 
 # Run function!
-def run(n,                        # Controls perlin noise                      (int)
-        k,                        # Controls perlin noise                      (int)
+def run(n,                        # Controls size of grid + perlin noise       (int)
+        k,                        # Number of noise layers we average          (int)
         num_particles,            # Number of particles                        (int)
         num_updates,              # Number of particle position updates        (int)
         max_vel,                  # Maximum allowed particle velocity          (float)
         angle_scale,              # Scales rotation by noise of force field    (float)
         x_scale = 50,             # Scales x component of force field          (float)
-        y_scale = 50,             # Scales y component of force field          (float)
+        y_scale = 200,             # Scales y component of force field         (float)
         image_name = "myimage"):  # Name of the final image (an svg); saved in the current working directory (stirng)
     # Assumption: We must have n > k (where n and k are integers)
     data = fractal(n,k)
@@ -375,13 +382,15 @@ def run(n,                        # Controls perlin noise                      (
     # plot the particle paths!
     plot_flow(x_hist,
               y_hist,
-              image_name)
+              num_particles,
+              num_updates,
+              image_name);
 
 
 
 ###############################################################################
 run(n = 7,
-    k = 6,
+    k = 3,
     num_particles = 500,
     num_updates = 500,
     max_vel = .2,
