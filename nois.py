@@ -17,9 +17,9 @@ class Particles():
                  num_particles,                            # Number of particles
                  max_vel):                                 # Maximum allowed particle velocity
 
-        self.num_particles = num_particles;                 # Number of particles
-        self.grid_size = grid_size;                         # Grid size (maximum x, y position)
-        self.max_vel = max_vel;                             # maximum allowed particle velocity
+        self.num_particles = num_particles;                # Number of particles
+        self.grid_size = grid_size;                        # Grid size (maximum x, y position)
+        self.max_vel = max_vel;                            # maximum allowed particle velocity
 
         # Initialize pos_x, pos_y using a uniform random distribution
         self.pos_x = np.random.uniform(0, grid_size - 1, num_particles);
@@ -342,19 +342,52 @@ def vector_field(data,                 # (float array)
     return vector_x, vector_y;
 
 
+def simulate(Force_x,
+             Force_y,
+             grid_size,
+             num_particles,
+             max_vel,
+             num_updates,
+             image_name,
+             image_dpi):
+    # Set up an array of particles
+    particles = Particles(grid_size = grid_size,
+                          num_particles = num_particles,
+                          max_vel = max_vel);
+
+    # Move the particles through the force field (defined by force_x, force_y)
+    # x_hist and y_hist store the tracks of each particles.
+    print("Simulating Particle Movement...    ", end = '');
+    x_hist, y_hist = particles.drive(Force_x,
+                                     Force_y,
+                                     num_updates);
+    print("Done!\n", end = '');
+
+
+    # plot the particle paths!
+    print("Generating Flow Plot...            ", end = '');
+    plot_flow(x_hist,
+              y_hist,
+              num_particles,
+              num_updates,
+              image_name,
+              image_dpi);
+    print("Done!\n", end = '');
+
+
 
 # Run function!
 def run(n,                        # The grid has 2^n points                    (int)
         num_freq,                 # Number of noise frequencies we average     (int)
-        num_particles,            # Number of particles                        (int)
-        max_vel,                  # Maximum allowed particle velocity          (float)
-        num_updates,              # Number of particle position updates        (int)
-        angle_scale,              # Scales rotation by noise of force field    (float)
-        x_scale = 5,              # Scales x component of force field          (float)
-        y_scale = 5,              # Scales y component of force field          (float)
+        angle_scale = 5,          # Scales rotation by noise of force field    (float)
+        x_scale = 1,              # Scales x component of force field          (float)
+        y_scale = 1,              # Scales y component of force field          (float)
+        num_particles = 1000,     # Number of particles                        (int)
+        max_vel = .2,             # Maximum allowed particle velocity          (float)
+        num_updates = 1000,       # Number of particle position updates        (int)
         save_forces = False,      # Toggles saving force field to file         (bool)
-        image_name = "myimage",   # Name of the final image (an svg); saved in the current working directory (string)
-        image_dpi = 300):         # DPI of the final (jpeg) image              (int)
+        image_name = "image",     # Name of the final image (an svg); saved in the current working directory (string)
+        image_dpi = 300):         # DPI of the final (png) image              (int)
     # Assumption: num_freq < n. We need this for the perlin noise to work.
 
     # First, generate the data.
@@ -403,51 +436,85 @@ def run(n,                        # The grid has 2^n points                    (
 
         # Print header.
         print("grid_size: %d\n" % grid_size,     file = File, end = '');
-        print(" x_coord | y_coord |  Force_x  | Force_y\n", file = File, end = '');
+        print(" x_coord | y_coord | Force_x  | Force_y\n", file = File, end = '');
 
         # Print each point's force position.
         for i in range(0, grid_size):
             for j in range(0, grid_size):
-                print("  %6u    %6u  %9.4f  %9.4f\n" % (i, j, Force_x[i][j], Force_y[i][j]), file = File, end = '');
+                print("  %6u    %6u  %8.4f  %8.4f\n" % (i, j, Force_x[i][j], Force_y[i][j]), file = File, end = '');
 
 
         File.close();
         print("Done!\n", end = '');
 
-    # Set up an array of particles
-    particles = Particles(grid_size = grid_size,
-                          num_particles = num_particles,
-                          max_vel = max_vel);
-
-    # Move the particles through the force field (defined by force_x, force_y)
-    # x_hist and y_hist store the tracks of each particles.
-    print("Simulating Particle Movement...    ", end = '');
-    x_hist, y_hist = particles.drive(Force_x,
-                                     Force_y,
-                                     num_updates);
-    print("Done!\n", end = '');
+    # Run the simulation!
+    simulate(Force_x,
+             Force_y,
+             grid_size,
+             num_particles,
+             max_vel,
+             num_updates,
+             image_name,
+             image_dpi);
 
 
-    # plot the particle paths!
-    print("Generating Flow Plot...            ", end = '');
-    plot_flow(x_hist,
-              y_hist,
-              num_particles,
-              num_updates,
-              image_name,
-              image_dpi);
-    print("Done!\n", end = '');
+
+def load(image_name,                   # Name of the final image (an svg); saved in the current working directory (string)
+         image_dpi,                    # DPI of the final (png) image              (int)
+         num_particles = 1000,         # Number of particles                        (int)
+         max_vel = .2,                 # Maximum allowed particle velocity          (float)
+         num_updates = 1000):          # Number of particle position updates        (int)
+    # First, load the forces from file (if we can)
+    File = open("./Force_" + image_name + ".txt", 'r');
+
+    # First, read in the grid_size.
+    grid_size = int(File.readline().split()[1]);
+
+    # Initialize Force_x, Force_y
+    Force_x = np.zeros((grid_size, grid_size));
+    Force_y = np.zeros((grid_size, grid_size));
+
+    # Read in, discard other header line.
+    Line = File.readline();
+
+    # Populate Force_x, Force_y line-by-line.
+    for i in range(0, grid_size):
+        for j in range(0, grid_size):
+            words = File.readline().split();
+            Force_x[i][j] = float(words[2]);
+            Force_y[i][j] = float(words[3]);
+
+    # Close file.
+    File.close();
+
+    # Run the simulation!
+    simulate(Force_x,
+             Force_y,
+             grid_size,
+             num_particles,
+             max_vel,
+             num_updates,
+             image_name,
+             image_dpi);
 
 
 
 ###############################################################################
+load(image_name = "wavy_11",
+     image_dpi = 300,
+     num_particles = 1000,
+     max_vel = .2,
+     num_updates = 1000);
+
+"""
 run(n = 7,
     num_freq = 4,
+    angle_scale = 5,
+    x_scale = 1,
+    y_scale = 1,
     num_particles = 1000,
     max_vel = .2,
     num_updates = 1000,
-    angle_scale = 5,
-    x_scale = 5,
-    y_scale = 5,
     save_forces = True,
     image_name = "wavy");
+"""
