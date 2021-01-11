@@ -308,9 +308,9 @@ def plot_vectors(vector_x,             # (float array)
 def rotate(vector_x,                         # (float)
            vector_y,                         # (float)
            angles):                          # (float)
-    new_xs = np.cos(angles) * vector_x - np.sin(angles) * vector_y;
-    new_ys = np.sin(angles) * vector_x + np.cos(angles) * vector_y;
-    return new_xs, new_ys;
+    x_rotated = np.cos(angles)*vector_x - np.sin(angles)*vector_y;
+    y_rotated = np.sin(angles)*vector_x + np.cos(angles)*vector_y;
+    return x_rotated, y_rotated;
 
 
 
@@ -347,11 +347,11 @@ def vector_field(data,                 # (float array)
 def run(n,                        # The grid has 2^n points                    (int)
         num_freq,                 # Number of noise frequencies we average     (int)
         num_particles,            # Number of particles                        (int)
-        num_updates,              # Number of particle position updates        (int)
         max_vel,                  # Maximum allowed particle velocity          (float)
+        num_updates,              # Number of particle position updates        (int)
         angle_scale,              # Scales rotation by noise of force field    (float)
-        x_scale = 50,             # Scales x component of force field          (float)
-        y_scale = 100,            # Scales y component of force field          (float)
+        x_scale = 5,              # Scales x component of force field          (float)
+        y_scale = 5,              # Scales y component of force field          (float)
         save_forces = False,      # Toggles saving force field to file         (bool)
         image_name = "myimage",   # Name of the final image (an svg); saved in the current working directory (string)
         image_dpi = 300):         # DPI of the final (jpeg) image              (int)
@@ -444,8 +444,10 @@ def run(n,                        # The grid has 2^n points                    (
 run(n = 7,
     num_freq = 4,
     num_particles = 1000,
-    num_updates = 1000,
     max_vel = .2,
-    angle_scale = 3,
+    num_updates = 1000,
+    angle_scale = 5,
+    x_scale = 5,
+    y_scale = 5,
     save_forces = True,
     image_name = "wavy");
