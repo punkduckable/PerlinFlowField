@@ -269,8 +269,8 @@ def plot_flow(x_hist,                  # (float array)
                     edgecolor = 'None');
 
     # Save flow plot!
-    plt.savefig(image_name, dpi = 900);
-    #plt.savefig(image_name + ".svg", format = 'svg')
+    plt.savefig("./Images/" + image_name, dpi = 900);
+    #plt.savefig("./Images/" + image_name + ".svg", format = 'svg')
 
     # Display flow plot.
     plt.show();
@@ -432,7 +432,7 @@ def run(n,                        # The grid has 2^n points                    (
     # If the user wants us to save the force field, then we will do that now.
     if (save_forces == True):
         print("Saving forces to file...           ", end = '');
-        File = open("./Force_" + image_name + ".txt", 'w');
+        File = open("./Saves/Force_" + image_name + ".txt", 'w');
 
         # Print header.
         print("grid_size: %d\n" % grid_size,     file = File, end = '');
@@ -465,7 +465,7 @@ def load(image_name,                   # Name of the final image (an svg); saved
          max_vel = .2,                 # Maximum allowed particle velocity          (float)
          num_updates = 1000):          # Number of particle position updates        (int)
     # First, load the forces from file (if we can)
-    File = open("./Force_" + image_name + ".txt", 'r');
+    File = open("./Saves/Force_" + image_name + ".txt", 'r');
 
     # First, read in the grid_size.
     grid_size = int(File.readline().split()[1]);
@@ -499,8 +499,8 @@ def load(image_name,                   # Name of the final image (an svg); saved
 
 
 
-###############################################################################
-load(image_name = "wavy_11",
+################################################################################
+load(image_name = "wavy",
      image_dpi = 300,
      num_particles = 1000,
      max_vel = .2,
