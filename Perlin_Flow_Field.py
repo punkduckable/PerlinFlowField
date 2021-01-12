@@ -321,12 +321,12 @@ def vector_field(data,                 # (float array)
                  y_scale):             # (float)
     # Initialize vector_x, vector_y arrays. At first, all vectors point in the y direction.
     # They are then rotated by an amount specified by the "Angles" variable (which is
-    # determined by the perlin noise) to get the final vector field.
+    # determined by the Perlin noise) to get the final vector field.
     grid_size = len(data[0]);
     vector_x = np.ones((grid_size, grid_size));
     vector_y = np.zeros((grid_size, grid_size));
 
-    # get angles at each point. The values of the angle are based on the data from the perlin noise.
+    # get angles at each point. The values of the angle are based on the data from the Perlin noise.
     angles = 2*np.pi*data*angle_scale;
 
     # Set force field using initalized vectors and angles
@@ -388,11 +388,11 @@ def run(n,                        # The grid has 2^n points                    (
         save_forces = False,      # Toggles saving force field to file         (bool)
         image_name = "image",     # Name of the final image (an svg); saved in the current working directory (string)
         image_dpi = 300):         # DPI of the final (png) image              (int)
-    # Assumption: num_freq < n. We need this for the perlin noise to work.
+    # Assumption: num_freq < n. We need this for the Perlin noise to work.
 
     # First, generate the data.
     # The data is a 2^n by 2^n grid of floats. Each point hold a float.
-    # To get these floats, we "average" together k "frequencies" of perlin
+    # To get these floats, we "average" together k "frequencies" of Perlin
     # noise.
     # The lowest (0th) frequency has 1 a random vector in each corner of the
     # grid. The value of the noise of this layer is given by interpolating these
