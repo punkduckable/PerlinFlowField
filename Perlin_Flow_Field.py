@@ -32,7 +32,6 @@ class Particles():
         self.acc_y = np.zeros(num_particles);
 
 
-
     def update_pos(self):
 
         for i in range(0, self.num_particles):
@@ -248,13 +247,16 @@ def plot_flow(x_hist,                  # (float array)
     plt.figure(1, figsize = (18, 12), dpi = image_dpi);
 
     # This specifies the set of possible colors for the plot.
-    c_list = ['#04577A','#53C8FB','#07B1FA','#28627A','#068CC7','#ffffff'];                    # Shades of Blue
-    #c_list = ['#3fe835', "#177511", "#ffffff"];              # Shades of Green
-    #c_list = ["#ff0000", "#ff5353", "#ff9797", "#ffebeb", "#bb0101", "#7e0202", "#000000"];   # Shades of Red
-    #c_list = ["#AD450C","#FF813D","#FA6E23","#00ADA7","#23FAF2","white","black"];             # Cyan, Brown, Black
+    #c_list = ['#005074','#58CBFF','#00B0FF','#285F78','#008AC8','#FFFFFF'];                       # Shades of Blue
+    c_list = ['#740050','#FF58CB','#FF00B0','#78285F','#C8008A','#FFFFFF'];                       # Shades of Pink
+    #c_list = ['#009012', '#50FF66', '#00FF20', '#20782B', '#00C819', '#FFFFFF'];                  # Shades of Green
+
+    #c_list = ['#FB8B28', '#AD2318', '#ffffff', '#FA1B04', '#FBD9CA', '#FF5733', '#FC9252', '#FDDD80']; #oranges and reds
+    #c_list = ["#ff0000", "#ff5353", "#ff9797", "#ffebeb", "#bb0101", "#7e0202", "#000000"];       # Shades of Red
+    #c_list = ["#AD450C","#FF813D","#FA6E23","#00ADA7","#23FAF2","white","black"];                 # Cyan, Brown, Black
 
     # Set of possible particle sizes
-    s_list = [5,6,6,7];
+    s_list = [6,7,7,8];
 
     # Now, make the plot!
     for i in range(0, num_particles):
@@ -273,7 +275,7 @@ def plot_flow(x_hist,                  # (float array)
     #plt.savefig("./Images/" + image_name + ".svg", format = 'svg')
 
     # Display flow plot.
-    plt.show();
+    #plt.show();
 
 
 
@@ -351,9 +353,11 @@ def simulate(Force_x,
              image_name,
              image_dpi):
     # Set up an array of particles
+    print("Setting up particles...            ", end = '');
     particles = Particles(grid_size = grid_size,
                           num_particles = num_particles,
                           max_vel = max_vel);
+    print("Done!\n", end = '');
 
     # Move the particles through the force field (defined by force_x, force_y)
     # x_hist and y_hist store the tracks of each particles.
@@ -464,7 +468,9 @@ def load(image_name,                   # Name of the final image (an svg); saved
          num_particles = 1000,         # Number of particles                        (int)
          max_vel = .2,                 # Maximum allowed particle velocity          (float)
          num_updates = 1000):          # Number of particle position updates        (int)
+
     # First, load the forces from file (if we can)
+    print("Reading data from save...          ", end = '');
     File = open("./Saves/Force_" + image_name + ".txt", 'r');
 
     # First, read in the grid_size.
@@ -486,6 +492,7 @@ def load(image_name,                   # Name of the final image (an svg); saved
 
     # Close file.
     File.close();
+    print("Done!\n", end = '');
 
     # Run the simulation!
     simulate(Force_x,
