@@ -235,21 +235,33 @@ def fractal(n, num_freq):
 # makes the final "flow" plot.
 def plot_flow(x_hist,                  # (float array)
               y_hist,                  # (float array)
+              grid_size,               # (int)
               num_particles,           # (int)
               num_updates,             # (int)
               image_name,              # (string)
-              image_dpi = 300):        # (int)
+              image_dpi = 300,         # (int)
+              image_width = 18,        # (float)
+              image_height = 12,       # (float)
+              line_alpha = .6):        # (float)
 
 
     # Set up plot.
     plt.style.use("default");
     plt.axis('off');
-    plt.figure(1, figsize = (18, 12), dpi = image_dpi);
+    plt.figure(1, figsize = (image_width, image_height));
+
+    # Set plot range.
+    # The particles x,y coordinates can be in (0, grid_size - 1). We show a
+    # slightly larger range. This makes the final image look better.
+    plt.xlim(-3, grid_size + 2);
+    plt.ylim(-3, grid_size + 2);
 
     # This specifies the set of possible colors for the plot.
     #c_list = ['#005074','#58CBFF','#00B0FF','#285F78','#008AC8','#FFFFFF'];                       # Shades of Blue
-    c_list = ['#740050','#FF58CB','#FF00B0','#78285F','#C8008A','#FFFFFF'];                       # Shades of Pink
+    #c_list = ['#740050','#FF58CB','#FF00B0','#78285F','#C8008A','#FFFFFF'];                       # Shades of Pink
     #c_list = ['#009012', '#50FF66', '#00FF20', '#20782B', '#00C819', '#FFFFFF'];                  # Shades of Green
+
+    c_list = ['#16835E', '#50FF66', '#20782B', '#00C819', '#FFFFFF'];                              # Shades of Green
 
     #c_list = ['#FB8B28', '#AD2318', '#ffffff', '#FA1B04', '#FBD9CA', '#FF5733', '#FC9252', '#FDDD80']; #oranges and reds
     #c_list = ["#ff0000", "#ff5353", "#ff9797", "#ffebeb", "#bb0101", "#7e0202", "#000000"];       # Shades of Red
@@ -267,11 +279,11 @@ def plot_flow(x_hist,                  # (float array)
                     y_hist[i],
                     s = particle_size,
                     color = particle_color,
-                    alpha = .6,
+                    alpha = line_alpha,
                     edgecolor = 'None');
 
     # Save flow plot!
-    plt.savefig("./Images/" + image_name, dpi = 900);
+    plt.savefig("./Images/" + image_name, dpi = image_dpi, bbox_inches = 'tight', pad_inches = 0);
     #plt.savefig("./Images/" + image_name + ".svg", format = 'svg')
 
     # Display flow plot.
@@ -282,11 +294,13 @@ def plot_flow(x_hist,                  # (float array)
 # Plots vectors
 def plot_vectors(vector_x,             # (float array)
                  vector_y,             # (float array)
-                 grid_size):                # (int)
+                 image_width,          # (float)
+                 image_height,         # (float)
+                 grid_size):           # (int)
     # Set up plot.
     plt.style.use('default');
     plt.axis('off');
-    plt.figure(2, figsize = (18, 12));
+    plt.figure(2, figsize = (image_width, image_height));
 
     # Set up x, y coordinates in the plot.
     x = np.linspace(0, grid_size - 1, grid_size);
@@ -319,8 +333,8 @@ def rotate(vector_x,                         # (float)
 # Creates the vector field.
 def vector_field(data,                 # (float array)
                  angle_scale,          # (float)
-                 x_scale,              # (float)
-                 y_scale):             # (float)
+                 image_width,          # (float)
+                 image_height):        # (float)
     # Initialize vector_x, vector_y arrays. At first, all vectors point in the y direction.
     # They are then rotated by an amount specified by the "Angles" variable (which is
     # determined by the Perlin noise) to get the final vector field.
@@ -334,12 +348,12 @@ def vector_field(data,                 # (float array)
     # Set force field using initalized vectors and angles
     vector_x, vector_y = rotate(vector_x, vector_y, angles);
 
-    # Scale x, y components of the vector field
-    vector_x = vector_x*x_scale;
-    vector_y = vector_y*y_scale;
-
     # Plot the vector field
-    plot_vectors(vector_x, vector_y, grid_size);
+    plot_vectors(vector_x = vector_x,
+                 vector_y = vector_y,
+                 image_width = image_width,
+                 image_height = image_height,
+                 grid_size = grid_size);
 
     return vector_x, vector_y;
 
@@ -351,7 +365,10 @@ def simulate(Force_x,
              max_vel,
              num_updates,
              image_name,
-             image_dpi):
+             image_dpi,
+             image_width,
+             image_height,
+             line_alpha):
     # Set up an array of particles
     print("Setting up particles...            ", end = '');
     particles = Particles(grid_size = grid_size,
@@ -370,12 +387,16 @@ def simulate(Force_x,
 
     # plot the particle paths!
     print("Generating Flow Plot...            ", end = '');
-    plot_flow(x_hist,
-              y_hist,
-              num_particles,
-              num_updates,
-              image_name,
-              image_dpi);
+    plot_flow(x_hist = x_hist,
+              y_hist = y_hist,
+              grid_size = grid_size,
+              num_particles = num_particles,
+              num_updates = num_updates,
+              image_name = image_name,
+              image_dpi = image_dpi,
+              image_width = image_width,
+              image_height = image_height,
+              line_alpha = line_alpha);
     print("Done!\n", end = '');
 
 
@@ -384,14 +405,15 @@ def simulate(Force_x,
 def run(n,                        # The grid has 2^n points                    (int)
         num_freq,                 # Number of noise frequencies we average     (int)
         angle_scale = 5,          # Scales rotation by noise of force field    (float)
-        x_scale = 1,              # Scales x component of force field          (float)
-        y_scale = 1,              # Scales y component of force field          (float)
         num_particles = 1000,     # Number of particles                        (int)
         max_vel = .2,             # Maximum allowed particle velocity          (float)
         num_updates = 1000,       # Number of particle position updates        (int)
         save_forces = False,      # Toggles saving force field to file         (bool)
         image_name = "image",     # Name of the final image (an svg); saved in the current working directory (string)
-        image_dpi = 300):         # DPI of the final (png) image              (int)
+        image_dpi = 300,          # DPI of the final (png) image               (int)
+        image_width = 18,         # Width (in inches) of the image             (int)
+        image_height = 12,        # Height (in inches) of the image            (int)
+        line_alpha = .6):         # How transparent the particle lines are.    (int)
     # Assumption: num_freq < n. We need this for the Perlin noise to work.
 
     # First, generate the data.
@@ -427,10 +449,10 @@ def run(n,                        # The grid has 2^n points                    (
     # Set up force field using the data. force_x, force_y represent the x and y
     # components of the force, respectively.
     print("Setting up Force Field...          ", end = '');
-    Force_x, Force_y = vector_field(data,
-                                    angle_scale,
-                                    x_scale,
-                                    y_scale);
+    Force_x, Force_y = vector_field(data = data,
+                                    angle_scale = angle_scale,
+                                    image_width = image_width,
+                                    image_height = image_height);
     print("Done!\n", end = '');
 
     # If the user wants us to save the force field, then we will do that now.
@@ -452,19 +474,25 @@ def run(n,                        # The grid has 2^n points                    (
         print("Done!\n", end = '');
 
     # Run the simulation!
-    simulate(Force_x,
-             Force_y,
-             grid_size,
-             num_particles,
-             max_vel,
-             num_updates,
-             image_name,
-             image_dpi);
+    simulate(Force_x = Force_x,
+             Force_y = Force_y,
+             grid_size = grid_size,
+             num_particles = num_particles,
+             max_vel = max_vel,
+             num_updates = num_updates,
+             image_name = image_name,
+             image_dpi = image_dpi,
+             image_width = image_width,
+             image_height = image_height,
+             line_alpha = line_alpha);
 
 
 
 def load(image_name,                   # Name of the final image (an svg); saved in the current working directory (string)
-         image_dpi,                    # DPI of the final (png) image              (int)
+         image_dpi,                    # DPI of the final (png) image               (int)
+         image_width,                  # Width (in inches) of the image             (float)
+         image_height,                 # Height (in inches) of the image            (float)
+         line_alpha,                   # How transparent the particle lines are     (float)
          num_particles = 1000,         # Number of particles                        (int)
          max_vel = .2,                 # Maximum allowed particle velocity          (float)
          num_updates = 1000):          # Number of particle position updates        (int)
@@ -495,20 +523,26 @@ def load(image_name,                   # Name of the final image (an svg); saved
     print("Done!\n", end = '');
 
     # Run the simulation!
-    simulate(Force_x,
-             Force_y,
-             grid_size,
-             num_particles,
-             max_vel,
-             num_updates,
-             image_name,
-             image_dpi);
+    simulate(Force_x = Force_x,
+             Force_y = Force_y,
+             grid_size = grid_size,
+             num_particles = num_particles,
+             max_vel = max_vel,
+             num_updates = num_updates,
+             image_name = image_name,
+             image_dpi = image_dpi,
+             image_width = image_width,
+             image_height = image_height,
+             line_alpha = line_alpha);
 
 
 
 ################################################################################
 load(image_name = "wavy",
-     image_dpi = 300,
+     image_width = 18,
+     image_height = 12,
+     image_dpi = 600,
+     line_alpha = .6,
      num_particles = 1000,
      max_vel = .2,
      num_updates = 1000);
@@ -517,11 +551,12 @@ load(image_name = "wavy",
 run(n = 7,
     num_freq = 4,
     angle_scale = 5,
-    x_scale = 1,
-    y_scale = 1,
     num_particles = 1000,
     max_vel = .2,
     num_updates = 1000,
     save_forces = True,
-    image_name = "wavy");
+    image_name = "wavy",
+    image_width = 18,
+    image_height = 12,
+    line_alpha = .6);
 """
