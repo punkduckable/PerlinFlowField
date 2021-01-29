@@ -315,7 +315,7 @@ def fractal(n,                         # (int)
         data = data + temp;
 
     # divide by total weight. This ensures that all data lies between -1 and 1.
-    data = data/num_freq;
+    data = data/total_weight;
 
     # Return averaged data
     return data;
@@ -650,7 +650,7 @@ load(image_name = "wavy",
 """
 run(n = 7,
     num_freq = 3,
-    angle_scale = 7,
+    angle_scale = 2,
     num_particles = 3000,
     max_vel = .2,
     num_updates = 1000,
