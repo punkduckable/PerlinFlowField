@@ -152,6 +152,8 @@ class Particles():
 
 def inner_grid_setup(sx,ex,sy,ey,n):
     """
+    Note: I have not touched this function
+
     sx= start x, ex = end x...
     n= steps inside the inner grid
 
@@ -174,7 +176,10 @@ def inner_grid_setup(sx,ex,sy,ey,n):
 
 
 def get_inner_prevals(corners,m):
-    """ returns the inner values of the grid"""
+    """
+    Note: I have not touched this function.
+
+    returns the inner values of the grid"""
     #dotting corners and displacement vectors
     val_a = a.dot(corners[0])
     val_b = b.dot(corners[1])
@@ -191,40 +196,129 @@ def get_inner_prevals(corners,m):
     return val
 
 
-def perlin(n,m):
-    """
-    n>m (ints)
-    """
-    scale = int(n/m)+1
-    vectors = np.random.uniform(-1,1,(scale,scale,2)) #grid of random vectors
-    data = np.ones((n,n))
+def perlin(grid_size,                  # (int)
+           inner_grid_spacing):           # (int)
+    # Assumption: grid_size > inner_grid_size (ints)
+
+    # Set up the main grid!
+    data = np.ones((grid_size, grid_size));
+
+    # Determine the inner grid size. The inner grid is the set of grid points
+    # whose coordinates are multiples of inner_grid_setup.
+    inner_grid_size = int(grid_size/inner_grid_spacing) + 1;
+
+    # Assign a pair of random values (between -1 and 1) to each grid point on
+    # the inner grid.
+    inner_grid_vectors = np.random.uniform(-1,1, (inner_grid_size, inner_grid_size, 2));
+
+    # We want the grid to have periodic BC's (in the x and y direction). To
+    # accomplish this, we set the final row/column of the gird vectors to the
+    # first ones.
+    for i in range(0, inner_grid_size):
+        inner_grid_vectors[inner_grid_size - 1][i] = inner_grid_vectors[0][i];
+        inner_grid_vectors[i][inner_grid_size - 1] = inner_grid_vectors[i][0];
+
+    # Set up a,b,c,d (used to interpolate stuff).
     global a,b,c,d
-    a = inner_grid_setup(0,1,0,-1,m)  #sets up inner grids
-    b = inner_grid_setup(-1,0,0,-1,m)
-    c = inner_grid_setup(0,1,1,0,m)
-    d = inner_grid_setup(-1,0,1,0,m)
-    for i in range(scale-1):
-        for j in range(scale-1):
-            corners = [vectors[i][j],vectors[i][j+1],vectors[i+1][j],vectors[i+1][j+1]]
-            heights = get_inner_prevals(corners, m)
-            data[i*m:(i+1)*m,j*m:(j+1)*m] = heights
+    a = inner_grid_setup( 0, 1, 0,-1, inner_grid_spacing);
+    b = inner_grid_setup(-1, 0, 0,-1, inner_grid_spacing);
+    c = inner_grid_setup( 0, 1, 1, 0, inner_grid_spacing);
+    d = inner_grid_setup(-1, 0, 1, 0, inner_grid_spacing);
 
-    return data
+    # Consider the gid points whose coordinates are a multiple of the
+    # inner_grid_spacing.
+    #
+    # These points form a subgrid (of dimension inner_grid_size x
+    # inner_grid_size) within the main grid (which is of dimension grid_size
+    # x grid_size).
+    #
+    # Consider one "box" in the inner grid. Each corner of this box corresponds
+    # to a point in the "sub grid" (grid points whose coordinates are a multiple
+    # of the inner_grid_spacing). Within this box are many points of the main
+    # grid. This is depicted in the image below (for the case of
+    # inner_grid_spacing = 4),
+    #   + - + - + - + - +
+    #   |   |   |   |   |
+    #   + - + - + - + - +
+    #   |   |   |   |   |
+    #   + - + - + - + - +
+    #   |   |   |   |   |
+    #   + - + - + - + - +
+    #   |   |   |   |   |
+    #   + - + - + - + - +
+    # We assign random vectors to each of the box's corners. We then interpolate
+    # these values to determine the value at every other gridpoint in this box.
+
+    # Cycle through the boxes of the inner grid.
+    for i in range(0, inner_grid_size - 1):
+        for j in range(0, inner_grid_size - 1):
+            # Determine the corner's random vectos
+            corner_vectors = [inner_grid_vectors[i][j], inner_grid_vectors[i][j+1], inner_grid_vectors[i+1][j], inner_grid_vectors[i+1][j+1]];
+
+            # Interpolate those values, determine the value at each point in
+            # this inner grid box.
+            box_grid_point_values = get_inner_prevals(corner_vectors, inner_grid_spacing);
+
+            # Assign this box's grid points to the values we found above.
+            data[i*inner_grid_spacing:(i+1)*inner_grid_spacing, j*inner_grid_spacing:(j+1)*inner_grid_spacing] = box_grid_point_values;
+
+    # All done!
+    return data;
 
 
-def fractal(n, num_freq):
-     """
-     n> num_freq (ints)
-     super imposes different frequency perlin noise
+def fractal(n,                         # (int)
+            num_freq):                 # (int)
 
-     """
-     maximum = 2**n
-     data = np.zeros((maximum, maximum))
-     for i in range(num_freq):
-         temp = perlin(maximum, 2**(n-i))*(2**(-(1 + i))) # Scale set to 2^i + 1 = 2^n / 2^(n-i) + 1
-         data = data + temp
-     data = data/num_freq
-     return data
+    # Assumption: n < n_freq.
+
+    # What does this function do?
+    # We average together n_freq layers of Perlin noise. There is a 2^n by 2^n
+    # grid.
+    #
+    # In the first noise layer, we assign a random value to the four corners
+    # of the gird. We interpolate these values to determine the value at every
+    # other grid point.
+    #
+    # In the second layer, we assign a random value to each grid point whose
+    # coordinates are multiples of 2^(n-1). The value on the other grid points
+    # are interpolated from these.
+    #
+    # On the kth layer, we assign a random value to each grid point whose
+    # coordinates are multiples of 2^(n - k). We interpolate these values to
+    # determine the value at each of the other grid points.
+    #
+    # Importantly, this means that num_freq can NOT exceed n. If it
+    # does, then we would try to assign random values to grid points with
+    # fractional coordinates (which is a big no-no). Futher, if num_freq = n,
+    # then there would be no interpolation in the last layer (every grid point
+    # would have a random vector), which would lead to no smoothing (and we
+    # want smooth/continuous noise). Therefore, we require that n > num_freq.
+
+    grid_size = 2**n;
+    data = np.zeros((grid_size, grid_size));
+
+    # Weighted combination of num_freq layers of noise. Each successive
+    # layer has half the weighting of the previous one.
+    total_weight = 0;
+    for i in range(0, num_freq):
+        # Consider the points whose coordinates are multiples of 2^(n-i). These
+        # points form a sub-grid within the main grid. Assign random vector to
+        # all grid points in the inner grid, and interpolate the rest.
+        inner_grid_spacing = 2**(n-i);
+        temp = perlin(grid_size, inner_grid_spacing);
+
+        # Scale the new data, keep track of sum of the weights.
+        temp = temp*(2**(-(1 + i)));
+        total_weight = total_weight + (2**(-(1 + i)));
+
+        # Add the new layer into the data.
+        data = data + temp;
+
+    # divide by total weight. This ensures that all data lies between -1 and 1.
+    data = data/num_freq;
+
+    # Return averaged data
+    return data;
 
 
 
@@ -292,7 +386,7 @@ def plot_flow(x_hist,                  # (float array)
                 pad_inches = 0);
     #plt.savefig("./Images/" + image_name + ".svg", format = 'svg')
 
-    # Display flow plot.
+    # Display flow, vector plots.
     #plt.show();
 
 
@@ -320,9 +414,6 @@ def plot_vectors(vector_x,             # (float array)
                vector_x,
                vector_y,
                color = "black");
-
-    # Show Vector plot.
-    plt.show();
 
 
 
