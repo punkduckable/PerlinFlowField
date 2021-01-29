@@ -51,6 +51,7 @@ class Particles():
         # velocity.
         for i in range(0, self.num_particles):
             vel_mag = np.sqrt(self.vel_x[i]*self.vel_x[i] + self.vel_y[i]*self.vel_y[i]);
+
             if (vel_mag > self.max_vel):
                 self.vel_x[i] = self.vel_x[i]*(self.max_vel/vel_mag);
                 self.vel_y[i] = self.vel_y[i]*(self.max_vel/vel_mag);
@@ -131,13 +132,11 @@ class Particles():
 
             # Now apply those forces to the particles and update their positions!
             self.apply_force(fx, fy);
+            self.speed_check();                  # Apply speed limit!
             self.update_pos();
 
             # Apply periodic BCs
             self.periodic_BC();
-
-            # Apply speed limit
-            self.speed_check();
 
             # Add the particle's current positions to the history variables.
             for i in range(0, self.num_particles):
@@ -259,12 +258,16 @@ def plot_flow(x_hist,                  # (float array)
     # This specifies the set of possible colors for the plot.
     #c_list = ['#005074','#58CBFF','#00B0FF','#285F78','#008AC8','#FFFFFF'];                       # Shades of Blue
     #c_list = ['#740050','#FF58CB','#FF00B0','#78285F','#C8008A','#FFFFFF'];                       # Shades of Pink
-    #c_list = ['#009012', '#50FF66', '#00FF20', '#20782B', '#00C819', '#FFFFFF'];                  # Shades of Green
+    #c_list = ['#16835E', '#50FF66', '#20782B', '#00C819', '#FFFFFF'];                             # Shades of Green
+    #c_list = ['#219417','#B2EAAD', '#9CF179', '#086742', '#DAF0E0', '#15785D'];                   # Greens and Teals ('#E8F0CB')
+    c_list = ['#000000', '#000000', '#f28400', '#ff2e00', '#bd2200', '#901a00'];                  # Lava (run with 3000+ particles or black background)
 
-    c_list = ['#16835E', '#50FF66', '#20782B', '#00C819', '#FFFFFF'];                              # Shades of Green
+    #c_list = ["#ff3e00", "#8d0000", "#ee7a24", "#f75d2b", "#000000"];       # Shades of Red
 
+
+    # Experimental
+    #c_list = ['#FB8B28', '#AD2318', '#ffffff', '#FA1B04', '#FBD9CA', '#FF5733', '#FC9252', '#FDDD80']; # Fire
     #c_list = ['#FB8B28', '#AD2318', '#ffffff', '#FA1B04', '#FBD9CA', '#FF5733', '#FC9252', '#FDDD80']; #oranges and reds
-    #c_list = ["#ff0000", "#ff5353", "#ff9797", "#ffebeb", "#bb0101", "#7e0202", "#000000"];       # Shades of Red
     #c_list = ["#AD450C","#FF813D","#FA6E23","#00ADA7","#23FAF2","white","black"];                 # Cyan, Brown, Black
 
     # Set of possible particle sizes
@@ -283,7 +286,10 @@ def plot_flow(x_hist,                  # (float array)
                     edgecolor = 'None');
 
     # Save flow plot!
-    plt.savefig("./Images/" + image_name, dpi = image_dpi, bbox_inches = 'tight', pad_inches = 0);
+    plt.savefig("./Images/" + image_name,
+                dpi = image_dpi,
+                bbox_inches = 'tight',
+                pad_inches = 0);
     #plt.savefig("./Images/" + image_name + ".svg", format = 'svg')
 
     # Display flow plot.
@@ -314,6 +320,9 @@ def plot_vectors(vector_x,             # (float array)
                vector_x,
                vector_y,
                color = "black");
+
+    # Show Vector plot.
+    plt.show();
 
 
 
@@ -538,6 +547,7 @@ def load(image_name,                   # Name of the final image (an svg); saved
 
 
 ################################################################################
+"""
 load(image_name = "wavy",
      image_width = 18,
      image_height = 12,
@@ -546,12 +556,11 @@ load(image_name = "wavy",
      num_particles = 1000,
      max_vel = .2,
      num_updates = 1000);
-
 """
 run(n = 7,
-    num_freq = 4,
-    angle_scale = 5,
-    num_particles = 1000,
+    num_freq = 3,
+    angle_scale = 7,
+    num_particles = 3000,
     max_vel = .2,
     num_updates = 1000,
     save_forces = True,
@@ -559,4 +568,3 @@ run(n = 7,
     image_width = 18,
     image_height = 12,
     line_alpha = .6);
-"""
