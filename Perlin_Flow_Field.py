@@ -331,6 +331,8 @@ def plot_flow(x_hist,                  # (float array)
               grid_size,               # (int)
               num_particles,           # (int)
               num_updates,             # (int)
+              color_list,              # (string list)
+              size_list,               # (int list)
               image_name,              # (string)
               image_dpi = 300,         # (int)
               image_width = 18,        # (float)
@@ -339,9 +341,9 @@ def plot_flow(x_hist,                  # (float array)
 
 
     # Set up plot.
+    plt.figure("Flow", figsize = (image_width, image_height));
     plt.style.use("default");
     plt.axis('off');
-    plt.figure(1, figsize = (image_width, image_height));
 
     # Set plot range.
     # The particles x,y coordinates can be in (0, grid_size - 1). We show a
@@ -349,28 +351,10 @@ def plot_flow(x_hist,                  # (float array)
     plt.xlim(-3, grid_size + 2);
     plt.ylim(-3, grid_size + 2);
 
-    # This specifies the set of possible colors for the plot.
-    #c_list = ['#005074','#58CBFF','#00B0FF','#285F78','#008AC8','#FFFFFF'];                       # Shades of Blue
-    #c_list = ['#740050','#FF58CB','#FF00B0','#78285F','#C8008A','#FFFFFF'];                       # Shades of Pink
-    #c_list = ['#16835E', '#50FF66', '#20782B', '#00C819', '#FFFFFF'];                             # Shades of Green
-    #c_list = ['#219417','#B2EAAD', '#9CF179', '#086742', '#DAF0E0', '#15785D'];                   # Greens and Teals ('#E8F0CB')
-    c_list = ['#000000', '#000000', '#f28400', '#ff2e00', '#bd2200', '#901a00'];                  # Lava (run with 3000+ particles or black background)
-
-    #c_list = ["#ff3e00", "#8d0000", "#ee7a24", "#f75d2b", "#000000"];       # Shades of Red
-
-
-    # Experimental
-    #c_list = ['#FB8B28', '#AD2318', '#ffffff', '#FA1B04', '#FBD9CA', '#FF5733', '#FC9252', '#FDDD80']; # Fire
-    #c_list = ['#FB8B28', '#AD2318', '#ffffff', '#FA1B04', '#FBD9CA', '#FF5733', '#FC9252', '#FDDD80']; #oranges and reds
-    #c_list = ["#AD450C","#FF813D","#FA6E23","#00ADA7","#23FAF2","white","black"];                 # Cyan, Brown, Black
-
-    # Set of possible particle sizes
-    s_list = [6,7,7,8];
-
     # Now, make the plot!
     for i in range(0, num_particles):
-        particle_color = rand.choice(c_list);
-        particle_size = rand.choice(s_list);
+        particle_color = rand.choice(color_list);
+        particle_size = rand.choice(size_list);
 
         plt.scatter(x_hist[i],
                     y_hist[i],
@@ -383,7 +367,8 @@ def plot_flow(x_hist,                  # (float array)
     plt.savefig("./Images/" + image_name,
                 dpi = image_dpi,
                 bbox_inches = 'tight',
-                pad_inches = 0);
+                pad_inches = 0,
+                facecolor = '#000000');
     #plt.savefig("./Images/" + image_name + ".svg", format = 'svg')
 
     # Display flow, vector plots.
@@ -400,7 +385,7 @@ def plot_vectors(vector_x,             # (float array)
     # Set up plot.
     plt.style.use('default');
     plt.axis('off');
-    plt.figure(2, figsize = (image_width, image_height));
+    plt.figure("Vector", figsize = (image_width, image_height));
 
     # Set up x, y coordinates in the plot.
     x = np.linspace(0, grid_size - 1, grid_size);
@@ -458,17 +443,19 @@ def vector_field(data,                 # (float array)
     return vector_x, vector_y;
 
 
-def simulate(Force_x,
-             Force_y,
-             grid_size,
-             num_particles,
-             max_vel,
-             num_updates,
-             image_name,
-             image_dpi,
-             image_width,
-             image_height,
-             line_alpha):
+def simulate(Force_x,             # (float array)
+             Force_y,             # (float array)
+             grid_size,           # (int)
+             num_particles,       # (int)
+             max_vel,             # (float)
+             num_updates,         # (int)
+             color_list,          # (string list)
+             size_list,           # (int list)
+             image_name,          # (string)
+             image_dpi,           # (int)
+             image_width,         # (float)
+             image_height,        # (float)
+             line_alpha):         # (float)
     # Set up an array of particles
     print("Setting up particles...            ", end = '');
     particles = Particles(grid_size = grid_size,
@@ -492,6 +479,8 @@ def simulate(Force_x,
               grid_size = grid_size,
               num_particles = num_particles,
               num_updates = num_updates,
+              color_list = color_list,
+              size_list = size_list,
               image_name = image_name,
               image_dpi = image_dpi,
               image_width = image_width,
@@ -504,10 +493,12 @@ def simulate(Force_x,
 # Run function!
 def run(n,                        # The grid has 2^n points                    (int)
         num_freq,                 # Number of noise frequencies we average     (int)
-        angle_scale = 5,          # Scales rotation by noise of force field    (float)
-        num_particles = 1000,     # Number of particles                        (int)
-        max_vel = .2,             # Maximum allowed particle velocity          (float)
-        num_updates = 1000,       # Number of particle position updates        (int)
+        angle_scale,              # Scales rotation by noise of force field    (float)
+        num_particles,            # Number of particles                        (int)
+        max_vel,                  # Maximum allowed particle velocity          (float)
+        num_updates,              # Number of particle position updates        (int)
+        color_list,               # list of colors for particle tracks         (float list)
+        size_list,                # list of sizes for particle tracks          (int list)
         save_forces = False,      # Toggles saving force field to file         (bool)
         image_name = "image",     # Name of the final image (an svg); saved in the current working directory (string)
         image_dpi = 300,          # DPI of the final (png) image               (int)
@@ -580,6 +571,8 @@ def run(n,                        # The grid has 2^n points                    (
              num_particles = num_particles,
              max_vel = max_vel,
              num_updates = num_updates,
+             color_list = color_list,
+             size_list = size_list,
              image_name = image_name,
              image_dpi = image_dpi,
              image_width = image_width,
@@ -588,14 +581,16 @@ def run(n,                        # The grid has 2^n points                    (
 
 
 
-def load(image_name,                   # Name of the final image (an svg); saved in the current working directory (string)
+def load(num_particles,                # Number of particles                        (int)
+         max_vel,                      # Maximum allowed particle velocity          (float)
+         num_updates,                  # Number of particle position updates        (int)
+         color_list,                   # list of colors for particle tracks         (float list)
+         size_list,                    # list of sizes for particle tracks          (int list)
+         image_name,                   # Name of the final image (an svg); saved in the current working directory (string)
          image_dpi,                    # DPI of the final (png) image               (int)
          image_width,                  # Width (in inches) of the image             (float)
          image_height,                 # Height (in inches) of the image            (float)
-         line_alpha,                   # How transparent the particle lines are     (float)
-         num_particles = 1000,         # Number of particles                        (int)
-         max_vel = .2,                 # Maximum allowed particle velocity          (float)
-         num_updates = 1000):          # Number of particle position updates        (int)
+         line_alpha):                  # How transparent the particle lines are     (float)
 
     # First, load the forces from file (if we can)
     print("Reading data from save...          ", end = '');
@@ -629,6 +624,8 @@ def load(image_name,                   # Name of the final image (an svg); saved
              num_particles = num_particles,
              max_vel = max_vel,
              num_updates = num_updates,
+             color_list = color_list,
+             size_list = size_list,
              image_name = image_name,
              image_dpi = image_dpi,
              image_width = image_width,
@@ -638,24 +635,43 @@ def load(image_name,                   # Name of the final image (an svg); saved
 
 
 ################################################################################
-"""
-load(image_name = "wavy",
-     image_width = 18,
-     image_height = 12,
-     image_dpi = 600,
-     line_alpha = .6,
-     num_particles = 1000,
-     max_vel = .2,
-     num_updates = 1000);
+# Launch!
+
+# Some preset color lists
+#color_list = ['#005074','#58CBFF','#00B0FF','#285F78','#008AC8','#FFFFFF'];             # Shades of Blue
+#color_list = ['#740050','#FF58CB','#FF00B0','#78285F','#C8008A','#FFFFFF'];             # Shades of Pink
+#color_list = ['#16835E', '#50FF66', '#20782B', '#00C819', '#FFFFFF'];                   # Shades of Green
+#color_list = ['#219417','#B2EAAD', '#9CF179', '#086742', '#DAF0E0', '#15785D'];         # Greens and Teals ('#E8F0CB')
+color_list = ['#000000', '#000000', '#f28400', '#ff2e00', '#bd2200', '#901a00'];        # Lava (run with 3000+ particles or black background)
+
+# Some preset size lists.
+#size_list = [8, 9, 9,1 0];
+size_list = [16, 18, 18, 20];
+#size_list = [30, 35, 35, 40];
+
+load(num_particles = 3000,
+     max_vel = .1,
+     num_updates = 2000,
+     color_list = color_list,
+     size_list = size_list,
+     image_name = "lava_layers=3_angle=2_black",
+     image_dpi = 300,
+     image_width = 22.5,
+     image_height = 18.5,
+     line_alpha = .6);
 """
 run(n = 7,
     num_freq = 3,
-    angle_scale = 2,
+    angle_scale = 2.5,
     num_particles = 3000,
     max_vel = .2,
     num_updates = 1000,
+    color_list = color_list,
+    size_list = size_list
     save_forces = True,
     image_name = "wavy",
+    image_dpi = 300,
     image_width = 18,
     image_height = 12,
     line_alpha = .6);
+"""
