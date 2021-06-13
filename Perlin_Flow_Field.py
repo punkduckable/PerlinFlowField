@@ -6,6 +6,7 @@ import numpy as np;
 import random as rand;
 import matplotlib.pyplot as plt;
 from typing import Tuple, List;
+import time;
 
 
 
@@ -51,12 +52,15 @@ class Particles():
         # Find the speed of each particle (remember, this operates pointwise)
         speed = np.sqrt(self.vel_x**2 + self.vel_y**2);
 
-        # Check if any of the particles speed is greater than the maximum. If
-        # so, then limit it!
-        for i in range(self.num_particles):
-            if(speed[i] > self.max_speed):
-                self.vel_x[i] = self.vel_x[i]*(self.max_speed/speed[i]);
-                self.vel_y[i] = self.vel_y[i]*(self.max_speed/speed[i]);
+        # This returns a boolean array whose ith entry is 1 if
+        # speed[i] > max_speed and is zero otherwise.
+        fast_indicies = (speed > self.max_speed);
+
+        # What's going on here? If the ith particle is traveling faster than the
+        # speed limit, then this modifies the magnitude of its velocity to be
+        # at the speed limit (but it does not modify the velocity's direction).
+        self.vel_x[fast_indicies] = (self.vel_x[fast_indicies]/speed[fast_indicies])*self.max_speed;
+        self.vel_y[fast_indicies] = (self.vel_y[fast_indicies]/speed[fast_indicies])*self.max_speed;
 
 
 
@@ -477,15 +481,17 @@ def rotate(vector_x,                         # (float)
 
 # Creates the vector field.
 def vector_field(perlin_grid,          # (float array)
+                 initial_vector,       # (2 element list of floats)
                  angle_scale,          # (float)
                  image_width,          # (float)
                  image_height):        # (float)
-    # Initialize vector_x, vector_y arrays. At first, all vectors point in the y direction.
-    # They are then rotated by an amount specified by the "Angles" variable (which is
-    # determined by the Perlin noise) to get the final vector field.
+    # Initialize vector_x, vector_y arrays. At first, all vectors point in the
+    # direction of the initial vector. They are then rotated by an amount
+    # specified by the "Angles" variable (which is determined by the Perlin
+    # noise) to get the final vector field.
     grid_size = perlin_grid.shape[0];
-    vector_x = np.ones((grid_size, grid_size));
-    vector_y = np.zeros((grid_size, grid_size));
+    vector_x = np.full((grid_size, grid_size), initial_vector[0], dtype = np.float32);
+    vector_y = np.full((grid_size, grid_size), initial_vector[1], dtype = np.float32);
 
     # get angles at each point. The values of the angle are based on the
     # perlin_grid from the Perlin noise.
@@ -520,22 +526,27 @@ def simulate(Force_x,             # (float array)
              line_alpha):         # (float)
     # Set up an array of particles
     print("Setting up particles...            ", end = '');
+    timer = time.perf_counter();
     particles = Particles(grid_size     = grid_size,
                           num_particles = num_particles,
                           max_speed     = max_speed);
-    print("Done!\n", end = '');
+    timer = time.perf_counter() - timer;
+    print("Done! Took %fs\n" % timer, end = '');
+
 
     # Move the particles through the force field (defined by force_x, force_y)
     # x_hist and y_hist store the tracks of each particles.
     print("Simulating Particle Movement...    ", end = '');
+    timer = time.perf_counter();
     x_hist, y_hist = particles.drive(Force_x,
                                      Force_y,
                                      num_updates);
-    print("Done!\n", end = '');
-
+    timer = time.perf_counter() - timer;
+    print("Done! Took %fs\n" % timer, end = '');
 
     # plot the particle paths!
     print("Generating Flow Plot...            ", end = '');
+    timer = time.perf_counter();
     plot_flow(x_hist        = x_hist,
               y_hist        = y_hist,
               grid_size     = grid_size,
@@ -548,14 +559,15 @@ def simulate(Force_x,             # (float array)
               image_width   = image_width,
               image_height  = image_height,
               line_alpha    = line_alpha);
-    print("Done!\n", end = '');
-
+    timer = time.perf_counter() - timer;
+    print("Done! Took %fs\n" % timer, end = '');
 
 
 # Run function!
 def run(n,                        # The grid has 2^n points                    (int)
         num_freq,                 # Number of noise frequencies we average     (int)
         angle_scale,              # Scales rotation by noise of force field    (float)
+        initial_vector,           # Vector that we rotate to create flowfield  (2 element list of floats)
         num_particles,            # Number of particles                        (int)
         max_speed,                # Maximum allowed particle speed             (float)
         num_updates,              # Number of particle position updates        (int)
@@ -573,6 +585,7 @@ def run(n,                        # The grid has 2^n points                    (
     # The perlin_grid is a 2^n by 2^n grid of floats. Each point hold a float.
     # To get these floats, we "average" together k "frequencies" of Perlin
     # noise.
+    #
     # The lowest (0th) frequency has 1 a random vector in each corner of the
     # grid. The value of the noise of this layer is given by interpolating these
     # vectors.
@@ -592,9 +605,11 @@ def run(n,                        # The grid has 2^n points                    (
     #
     # In this way, there are more random vectors in higher frequencies, which
     # leads to more chaotic noise values.
+    timer = time.perf_counter();
     print("Setting up Noise...                ", end = '');
     perlin_grid = fractal(n, num_freq);
-    print("Done!\n", end = '');
+    timer = time.perf_counter() - timer;
+    print("Done! Took %fs\n" % timer, end = '');
 
     # Get the number of grid points in the x, y directions.
     grid_size = perlin_grid.shape[0];
@@ -602,15 +617,19 @@ def run(n,                        # The grid has 2^n points                    (
     # Set up force field using the perlin_grid. force_x, force_y represent the
     # x and y components of the force, respectively.
     print("Setting up Force Field...          ", end = '');
-    Force_x, Force_y = vector_field(perlin_grid  = perlin_grid,
-                                    angle_scale  = angle_scale,
-                                    image_width  = image_width,
-                                    image_height = image_height);
-    print("Done!\n", end = '');
+    timer = time.perf_counter();
+    Force_x, Force_y = vector_field(perlin_grid    = perlin_grid,
+                                    initial_vector = initial_vector,
+                                    angle_scale    = angle_scale,
+                                    image_width    = image_width,
+                                    image_height   = image_height);
+    timer = time.perf_counter() - timer;
+    print("Done! Took %fs\n" % timer, end = '');
 
     # If the user wants us to save the force field, then we will do that now.
     if (save_forces == True):
         print("Saving forces to file...           ", end = '');
+        timer = time.perf_counter();
         File = open("./Saves/Force_" + image_name + ".txt", 'w');
 
         # Print header.
@@ -624,7 +643,8 @@ def run(n,                        # The grid has 2^n points                    (
 
 
         File.close();
-        print("Done!\n", end = '');
+        timer = time.perf_counter() - timer;
+        print("Done! Took %fs\n" % timer, end = '');
 
     # Run the simulation!
     simulate(Force_x        = Force_x,
@@ -656,6 +676,7 @@ def load(num_particles,                # Number of particles                    
 
     # First, load the forces from file (if we can)
     print("Reading perlin_grid from save...          ", end = '');
+    timer = time.perf_counter();
     File = open("./Saves/Force_" + image_name + ".txt", 'r');
 
     # First, read in the grid_size.
@@ -677,7 +698,8 @@ def load(num_particles,                # Number of particles                    
 
     # Close file.
     File.close();
-    print("Done!\n", end = '');
+    timer = time.perf_counter() - timer;
+    print("Done! Took %fs\n" % timer, end = '');
 
     # Run the simulation!
     simulate(Force_x        = Force_x,
@@ -704,11 +726,12 @@ def load(num_particles,                # Number of particles                    
 #color_list = ['#740050','#FF58CB','#FF00B0','#78285F','#C8008A','#FFFFFF'];             # Shades of Pink
 #color_list = ['#16835E', '#50FF66', '#20782B', '#00C819', '#FFFFFF'];                   # Shades of Green
 #color_list = ['#219417','#B2EAAD', '#9CF179', '#086742', '#DAF0E0', '#15785D'];         # Greens and Teals ('#E8F0CB')
-color_list = ['#000000', '#000000', '#f28400', '#ff2e00', '#bd2200', '#901a00'];        # Lava (run with 3000+ particles or black background)
+#color_list = ['#000000', '#000000', '#f28400', '#ff2e00', '#bd2200', '#901a00'];        # Lava (run with 3000+ particles or black background)
+color_list = ['#000000', '#000000', '#04FC05', '#00B85D', '#01C136', '#017C50', '#CD2BB2', '#6D117C'];
 
 # Some preset size lists.
-#size_list = [8, 9, 9,1 0];
-size_list = [16, 18, 18, 20];
+size_list = [8, 9, 9, 10];
+#size_list = [16, 18, 18, 20];
 #size_list = [30, 35, 35, 40];
 
 """
@@ -726,7 +749,8 @@ load(num_particles  = 3000,
 run(n               = 7,
     num_freq        = 3,
     angle_scale     = 2.5,
-    num_particles   = 1000,
+    initial_vector  = [.5, .5],
+    num_particles   = 3000,
     max_speed       = .2,
     num_updates     = 500,
     color_list      = color_list,
